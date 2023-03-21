@@ -1,0 +1,42 @@
+.modal-header{
+    background-color: aliceblue;
+}
+.table-hover tbody tr:hover {
+    -moz-box-shadow: 0px 2px 4px #e06547 !important;
+    box-shadow: 0 0 6px 0 #c4c4c4 !important;
+    background-color: white !important;
+    border-radius: 90px !important;
+}
+
+.card-tools{
+    position: absolute;
+    right: 10px;
+    top: 5px;
+}
+
+.dataTables_processing{
+    background-color: white !important;
+    padding: 0rem !important;
+}
+
+table.dataTable>thead>tr>th:not(.sorting_disabled), table.dataTable>thead>tr>td:not(.sorting_disabled) {
+    padding: 10px;
+}
+
+table.dataTable>tfoot>tr>th:not(.sorting_disabled), table.dataTable>tfoot>tr>td:not(.sorting_disabled) {
+    padding: 10px;
+}
+
+#invoice-items{
+    border-bottom: 2px solid #dee2e6;
+}
+
+#invoice-items .form-control:disabled, .form-control[readonly] {
+    background-color: #f7f7f7;
+    opacity: 1;
+}
+
+.table-condensed td, .table-condensed th {
+    padding: 0.25rem
+}
+
