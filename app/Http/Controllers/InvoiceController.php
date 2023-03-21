@@ -202,6 +202,7 @@ class InvoiceController extends Controller
         $invoice_code = $request->invoice_code;
         $count_id = $request->count_id;
         $customer_id = $request->customer_id;
+        $old_customer_id = $request->old_customer_id;
         $invoice_date = Carbon::parse($request->invoice_date)->format('Y-m-d');
         $invoice_note = $request->invoice_note;
         $subtotal = $request->subtotal;
@@ -284,35 +285,6 @@ class InvoiceController extends Controller
                   ]);
 
 
-                
-            // if ($old_customer != $customer_id){
-                
-            //     //Update Amount Due in New Customer 
-                   
-            //         // get invoice due amount
-
-            //         $current_invoice_due = $invoice->invoice_amount_due;
-
-            //         //subtract from old customer_invoice_due
-            //         $old_cust = Customer::find($old_customer);
-            //         $old_cust->update([
-            //             'customer_invoice_due' => $old_cust->customer_invoice_due  -  $current_invoice_due
-            //         ]);
-                    
-                   
-            //         //add to new customer_invoice_due
-            //         $new_cust = Customer::find($customer_id);
-
-                  
-            //         $new_cust->update([
-            //             'customer_invoice_due' => $new_cust->customer_invoice_due  +  $current_invoice_due
-            //         ]);
-                    
-
-            
-            // }
-
-
              
             //INVOICE ITEMS DETAILS
             $invoice_items = [];
@@ -341,6 +313,35 @@ class InvoiceController extends Controller
                     'payment_note'    => $payment_note,
                 ]);
             }
+
+
+
+/////////////////////////////////////////////////////////
+//// CHANGED CUSTOMER ON INVOICE 
+
+if ($old_customer_id != $customer_id){
+
+    //get amount due on INVOICE
+        $current_invoice_due = $invoice->invoice_amount_due;
+
+    // subtract from invoice due on OLD CUSTOMER TABLE
+        $old_cust = Customer::find($old_customer_id);
+        $old_cust->update([
+                        'customer_invoice_due' => $old_cust->customer_invoice_due  -  $current_invoice_due
+        ]);
+
+    // add to Invoice due on NEW CUSTOMER
+
+        $new_cust = Customer::find($customer_id);
+        $new_cust->update([
+                        'customer_invoice_due' => $new_cust->customer_invoice_due  +  $current_invoice_due
+        ]);
+
+
+}
+
+
+//////////////////////////////////////////////////////
             
             DB::commit();
             return (['status'=> $last_invoice_id, 'message' => 'Invoice has been successfully updated.']);

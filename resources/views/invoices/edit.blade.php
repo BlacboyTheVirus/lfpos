@@ -78,6 +78,7 @@
                                             <select class="form-control form-control-border" id="customer-id" name="customer_id" >
                                                 <option value='{{$invoice->customer_id}}' selected="selected">{{$invoice->customer->customer_code}} | {{$invoice->customer->customer_name}} </option>
                                             </select>
+                                            <input type="hidden" name="old_customer_id" value="{{ $invoice->customer_id }}" >
                                         </div>
 
                                         <div class="col-sm-2">
