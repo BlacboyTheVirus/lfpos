@@ -21,6 +21,14 @@ class Customer extends Model
         'created_by'
     ];
 
+    protected $appends = ['total_due'];
+
+   
+    public function getTotalDueAttribute()
+    {
+        return $this->customer_amount_due + $this->customer_invoice_due;
+    }
+
     public function invoices(){
         return $this->hasMany(Invoice::class);
     }

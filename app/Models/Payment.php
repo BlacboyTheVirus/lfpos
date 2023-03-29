@@ -21,7 +21,8 @@ class Payment extends Model
         'amount', 
         'payment_note', 
         'created_at',
-        'updated_at'
+        'updated_at',
+        'payment_created_by'
     ];
 
 

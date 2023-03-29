@@ -97,10 +97,10 @@
                                     <b>Amount Due:</b> ₦ {{ number_format($invoice->invoice_amount_due, 2, '.', ',') }}<br>
                                     <b>Payment Status:</b>
                                     <span
-                                        class="badge text-md  font-weight-normal 
-                                            @if ($invoice->payment_status == 'unpaid') badge-danger
-                                            @elseif($invoice->payment_status == 'partial') badge-warning
-                                            @elseif ($invoice->payment_status == 'paid')   badge-success @endif 
+                                        class="badge text-sm  font-weight-normal 
+                                            @if ($invoice->payment_status == 'Unpaid') badge-danger
+                                            @elseif($invoice->payment_status == 'Partial') badge-warning
+                                            @elseif ($invoice->payment_status == 'Paid')   badge-success @endif 
                                                                           ">
                                         {{ $invoice->payment_status }}</span><br>
 
@@ -116,7 +116,7 @@
                             <div class="col-12 table-responsive">
                                 <table class="table ">
                                     <thead>
-                                        <tr>
+                                        <tr class="bg-gray-light">
                                             <th width="15%">Type</th>
                                             <th width="15%">Size (w x h) ft</th>
                                             <th width="15%">Unit Price</th>

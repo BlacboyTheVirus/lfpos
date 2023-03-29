@@ -6,8 +6,8 @@
     <title>{{ config('app.name', 'Laravel') }}</title>
 
   <!-- Pace loader -->
-  {{-- <script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script>
-  <link rel="stylesheet" href="{{ asset('css/pace_loading-bar.css') }}"> --}}
+  <script src="https://cdn.jsdelivr.net/npm/pace-js@latest/pace.min.js"></script>
+  <link rel="stylesheet" href="{{ asset('css/pace_flash.css') }}">
 
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet"
@@ -18,16 +18,38 @@
     <link rel="stylesheet" href="{{ asset('css/adminlte.min.css') }}">
 
     <link rel="stylesheet" href="{{ asset('css/custom.css') }}">
-   
 
-    <link rel="stylesheet" href="{{ asset('plugins/jquery-confirm/jquery-confirm.min.css') }}">
+    
+    {{-- <link rel="stylesheet" href="{{ asset('plugins/jquery-confirm/jquery-confirm.min.css') }}"> --}}
     
     @yield('styles')
 
-</head>
-<body class="layout-navbar-fixed text-sm sidebar-mini layout-fixed accent-info">
-<div class="wrapper">
 
+</head>
+<body class="layout-navbar-fixed text-sm sidebar-mini layout-fixed accent-info"> <!-- SOUND CODE -->
+
+      <!-- Notification sound -->
+    <audio id="failed">
+      <source src="{{ asset('sound/failed.mp3') }}" type="audio/mpeg">
+      <source src="{{ asset('sound/failed.ogg') }}" type="audio/ogg">
+    </audio>
+    <audio id="success">
+      <source src="{{ asset('sound/success.mp3') }}" type="audio/mpeg">
+      <source src="{{ asset('sound/failed.ogg') }}" type="audio/ogg">
+    </audio>
+    <audio id="login">
+      <source src="{{ asset('sound/login.mp3') }}" type="audio/mpeg">
+      <source src="{{ asset('sound/login.ogg') }}" type="audio/ogg">
+    </audio>
+    <script type="text/javascript">
+      var failed_sound = document.getElementById("failed"); 
+      var success_sound = document.getElementById("success");
+      var login_sound = document.getElementById("login"); 
+    </script>
+
+  <div class="wrapper">
+
+  
 
   <div class="preloader flex-column justify-content-center align-items-center" style="z-index: 99999999999">
     <img class="animation__shake" src="{{ asset('images/logo2.png') }}" alt="LfPOS" >
@@ -272,7 +294,7 @@
 <script src="{{ asset('plugins/jquery-validation/additional-methods.min.js') }}"></script>
 
 <!-- jquery-confirm -->
-<script src="{{ asset('plugins/jquery-confirm/jquery-confirm.min.js') }}"></script>
+{{-- <script src="{{ asset('plugins/jquery-confirm/jquery-confirm.min.js') }}"></script> --}}
 
 
 @yield('scripts')
@@ -283,6 +305,15 @@
 
 
 <script src="{{ asset('js/script.js') }}" defer></script>
+
+<script>
+  $(document).ajaxStart(function() { Pace.restart(); }); 
+</script>
+
+
+
+
+
 
 
 

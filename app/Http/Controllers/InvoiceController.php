@@ -49,11 +49,14 @@ class InvoiceController extends Controller
     }
 
 
-    public function view(Request $request){
-        $invoice = Invoice::findOrFail($request->id);
+
+    public function view($id){
+        $invoice = Invoice::findOrFail($id);
         $invoice->invoice_date = Carbon::parse($invoice->invoice_date)->format('jS, F Y');
+        $invoice->payment_status = ucfirst($invoice->payment_status);
         foreach ($invoice->payments as $payment) {
             $payment->payment_date = Carbon::parse($payment->payment_date)->format('d-m-Y');
+
         }
         
         return view('invoices.view', compact(['invoice']));
@@ -74,6 +77,7 @@ class InvoiceController extends Controller
         $grandtotal = $request->grandtotal;
         $amount_paid = $request->amount_paid;
         $amount_due = $grandtotal - $amount_paid; 
+       
 
      
 
@@ -152,6 +156,7 @@ class InvoiceController extends Controller
                     'payment_type'    => $payment_type,
                     'amount'          => $amount_paid,
                     'payment_note'    => $payment_note,
+                    'payment_created_by'    => Auth::user()->name,
                 ]);
             }
 
@@ -161,14 +166,12 @@ class InvoiceController extends Controller
         }  catch(Exception $ex){
             DB::rollBack();
             //throw $ex;
-            return (['status'=> 0, 'message' => $ex.'Oh! Oh!. Something unusal just happened. Please try again.']);
+            return (['status'=> 0, 'message' => 'Oh! Oh!. Something unusal just happened. Please try again.']);
 
         } //END DB TRANSACTIONS
 
 
     } // end INVOICE STORE
-
-
 
 
     public function edit(Request $request){
@@ -274,8 +277,9 @@ class InvoiceController extends Controller
                   
             $last_invoice_id = $invoice->id;
 
-///////////////////////////////////////////////////
-            // RE WRITE TO CALCULATE FROM PAYMENTS DB AND INVOICE  //////////////////////////////////
+            ///////////////////////////////////////////////////
+            // RE WRITE TO CALCULATE FROM PAYMENTS DB AND INVOICE
+            //////////////////////////////////
                  
                 ////Update Amount Due in Owner Customer
                   $customers = Customer::find($customer_id);
@@ -311,6 +315,7 @@ class InvoiceController extends Controller
                     'payment_type'    => $payment_type,
                     'amount'          => $amount_paid,
                     'payment_note'    => $payment_note,
+                    'payment_created_by'      => Auth::user()->name,
                 ]);
             }
 
@@ -337,12 +342,11 @@ if ($old_customer_id != $customer_id){
                         'customer_invoice_due' => $new_cust->customer_invoice_due  +  $current_invoice_due
         ]);
 
-
 }
 
 
 //////////////////////////////////////////////////////
-            
+             
             DB::commit();
             return (['status'=> $last_invoice_id, 'message' => 'Invoice has been successfully updated.']);
 
@@ -356,6 +360,304 @@ if ($old_customer_id != $customer_id){
 
 
     } // END INVOICE UPDATE
+
+
+
+//////////////////////////////////////////////////////////
+// DELETE INVOICE 
+/////////////////////////////////////////////////////////
+
+    public function delete($id){
+    $invoice = Invoice::findOrFail($id);
+
+    $grandtotal = $invoice->invoice_grand_total;
+    $amountpaid = $invoice->invoice_amount_paid;
+    $amountdue = $invoice->invoice_amount_due;
+    $customer_id = $invoice->customer->id;
+
+    DB::beginTransaction();
+    try {
+
+        
+
+        //Delete Invoice Items
+        $invoice->invoiceitems()->delete();
+
+        //Delete Payments
+        $invoice->payments()->delete();
+
+        //Delete Invoice
+        $invoice->delete();
+
+        //subtract InvoiceDue from Customer Table
+        $customer = Customer::find($customer_id);
+        $customer->update([
+            'customer_invoice_due' => $customer->customer_invoice_due  -  $amountdue
+        ]);
+
+        
+        DB::commit();
+        return (['status'=> 1, 'message' => 'Invoice has been successfully deleted.']);
+    } catch(Exception $ex) {
+        DB::rollBack();
+        return (['status'=> 0, 'message' => $ex.' - Oh! Oh!. Something unusal just happened. Please try again.']);
+    } //END DB TRANSACTIONS
+     
+
+
+}//END DELETE INVOICE
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////// INVOICE PAYMENT DETAILS /////////////
+
+    public function paymentdetails(Request $request){
+
+        $id = $request->id;
+        $invoice = Invoice::with('payments')->findOrFail($id);
+
+        
+
+        $payments_details = '';
+        if ($invoice->payments->count() == 0) {
+            $payments_details = '<tr><td colspan="7" class="text-danger text-center text-sm">No Records Found</td></tr>';
+        }
+        foreach ($invoice->payments as $key => $payment) {
+          $payments_details = $payments_details . '<tr id="payment_'.$payment->id.'">
+                            <td>'.++$key.'</td>
+                            <td>'.Carbon::parse($payment->payment_date)->format('d-m-Y').'</td>
+                            <td class="text-right pr-2"> ₦ <span class="payment_row">'.number_format($payment->amount,2,).'</span></td>
+                            <td class="text-center">'.$payment->payment_type.'</td>
+                            <td>'.$payment->payment_note.'</td>
+                            <td>'.$payment->payment_created_by.'</td>
+                            <td><a onclick="delete_payment('.$payment->id.')" class="pointer btn btn-sm btn-danger "><i class="fa fa-trash-alt"></i></a>
+                            </td>
+                        </tr>';
+        }
+       
+        $reponse = '<div class="row">
+        <div class="col-md-12">
+            <div class="row invoice-info">
+              <div class="col-sm-4 invoice-col">
+                Customer Information 
+                <address>
+                    <strong>'.$invoice->customer->customer_name.'</strong><br>
+                    <strong>'.$invoice->customer->customer_code.'</strong><br>
+                    <strong>'.$invoice->customer->customer_phone.'</strong><br>
+                    
+                </address>
+              </div>
+
+              <!-- /.col -->
+              <div class="col-sm-4 invoice-col">
+                Sales Information:
+                <address>
+                  <b>Invoice #: '.$invoice->invoice_code.'</b><br>
+                  <b>Date : '.Carbon::parse($invoice->invoice_date)->format('d-m-Y').'</b><br>
+                  <b>Grand Total : ₦ <span id="grand_total">'.number_format($invoice->invoice_grand_total,2,).'</span></b><br>
+                </address>
+              </div>
+              <!-- /.col -->
+              <div class="col-sm-4 invoice-col">
+              Payment Summary:<br>
+                <b>Paid Amount : ₦ <span id="total_payment">'.number_format($invoice->invoice_amount_paid,2,).'</span></b><br>
+                <b>Due Amount : ₦ <span id="amount_due">'.number_format($invoice->invoice_amount_due,2,).'</span></b><br>
+               
+              </div>
+              <!-- /.col -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <div class="col-md-12">
+         
+       
+                <div class="row">
+                    <div class="col-md-12">
+                    
+                        <table class="table table-bordered table-condensed" >
+                            <thead>
+                                <tr style="background-color:#f4f6f9 !important">
+                                    <td>#</td>
+                                    <td>Payment Date</td>
+                                    <td>Amount</td>
+                                    <td>Payment Type</td>
+                                    <td>Payment Note</td>
+                                    <td>Created By</td>
+                                    <td>Action</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            '.$payments_details.'
+                                
+                            </tbody>
+                        </table>
+                 
+                    </div>
+                    <div class="clearfix"></div>
+                </div>    
+       
+        </div><!-- col-md-9 -->
+        <!-- RIGHT HAND -->
+      </div>';
+
+        return $reponse;
+
+    }
+
+
+//////////////////////////////// AJAX ////////////////////////
+
+    public function ajax(Request $request)
+    {
+
+        $draw = $request->get('draw');
+        $start = $request->get("start");
+        $rowperpage = $request->get("length"); // Rows display per page
+
+        $columnIndex_arr = $request->get('order');
+        $columnName_arr = $request->get('columns');
+        $order_arr = $request->get('order');
+        $search_arr = $request->get('search');
+
+        $columnIndex = $columnIndex_arr[0]['column']; // Column index
+        $columnName = $columnName_arr[$columnIndex]['data']; // Column name
+        $columnSortOrder = $order_arr[0]['dir']; // asc or desc
+        $searchValue = $search_arr['value']; // Search value
+
+        $show_account_receivable = $request->get('show_account_receivable');
+
+        // Total records
+        $totalRecords = DB::table('invoices')->select('count(*) as allcount')->count();
+
+        $totalRecordswithFilter = DB::table('invoices')->select('count(*) as allcount')
+            ->join('customers', 'invoices.customer_id', '=', 'customers.id')
+            ->where('invoice_code', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_date', 'like', '%' . $searchValue . '%')
+            ->orWhere('customer_name', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_subtotal', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_discount', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_roundoff', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_grand_total', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_amount_paid', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_amount_due', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_note', 'like', '%' . $searchValue . '%')
+            ->orWhere('payment_status', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoices.created_by', 'like', '%' . $searchValue . '%')
+            ->count();
+
+            // $users = User::where('active','1')->where(function($query) {
+            //     $query->where('email','jdoe@example.com')
+            //                 ->orWhere('email','johndoe@example.com');
+            // })->get();
+
+        // Fetch records
+        $records = DB::table('invoices')->orderBy($columnName, $columnSortOrder)
+            ->join('customers', 'invoices.customer_id', '=', 'customers.id')
+            ->where('invoice_code', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_date', 'like', '%' . $searchValue . '%')
+            ->orWhere('customer_name', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_subtotal', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_discount', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_roundoff', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_grand_total', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_amount_paid', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_amount_due', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoice_note', 'like', '%' . $searchValue . '%')
+            ->orWhere('payment_status', 'like', '%' . $searchValue . '%')
+            ->orWhere('invoices.created_by', 'like', '%' . $searchValue . '%')
+            ->select('invoices.*', 'customers.customer_name')
+            ->skip($start)
+            ->take($rowperpage)
+            ->get();
+
+
+        $data_arr = array();
+
+        foreach ($records as $record) {
+
+            $id = $record->id;
+            $invoice_code = $record->invoice_code;
+            $invoice_date = Carbon::parse($record->invoice_date)->format('d-m-Y');
+            $invoice_customer_name = $record->customer_name;
+            $invoice_grand_total = $record->invoice_grand_total;
+            $invoice_amount_paid = $record->invoice_amount_paid;
+            $invoice_amount_due = $record->invoice_amount_due;
+            $invoice_payment_status = ucfirst($record->payment_status);
+            $created_by = ucfirst($record->created_by);
+
+        
+            if ($show_account_receivable == 'checked') {
+                if (($invoice_amount_due) > 0) {
+                    $data_arr[] = array(
+                        "invoice_date"              =>  $invoice_date,
+                        "invoice_code"              =>  $invoice_code,
+                        "customer_name"             =>  $invoice_customer_name,
+                        "invoice_grand_total"       =>  $invoice_grand_total,
+                        "invoice_amount_paid"       =>  $invoice_amount_paid,
+                        "invoice_amount_due"        =>  $invoice_amount_due,
+                        "payment_status"            =>  $invoice_payment_status,
+                        "created_by"                =>  $created_by,
+                        "action"                    =>  "<div class='btn-group'>
+                        <button type='button' class='btn btn-sm btn-info dropdown-toggle dropdown-icon' data-toggle='dropdown'>Action <span class='sr-only'>Toggle Dropdown</span></button>
+                        <div class='dropdown-menu' role='menu'>
+                        <a class='dropdown-item' id= '" . $id . "' href='view/" .  $id . "'  ><i class= 'fas fa-eye mr-2'></i>View Invoice</a>
+                        <a class='dropdown-item' id= '" . $id . "' href='edit/" .  $id . "'  ><i class= 'fas fa-edit mr-2'></i>Edit</a>
+                        <a class='dropdown-item' onclick='view_payments(".$id.")' href='#' ><i class='fa fa-money-bill mr-2'></i>View Payments</a>
+                        <div class='dropdown-divider'>
+                        </div>
+                        <a class='dropdown-item' href='#'><i class='far fa-trash-alt mr-2 text-danger'></i>Delete</a>
+                        </div>
+                        </div>" ,
+                    );
+                    $totalRecords--;
+                    $totalRecordswithFilter--;
+                }
+            } else {
+                $data_arr[] = array(
+                    "invoice_date"                  =>  $invoice_date,
+                        "invoice_code"              =>  $invoice_code,
+                        "customer_name"             =>  $invoice_customer_name,
+                        "invoice_grand_total"       =>  $invoice_grand_total,
+                        "invoice_amount_paid"       =>  $invoice_amount_paid,
+                        "invoice_amount_due"        =>  $invoice_amount_due,
+                        "payment_status"            =>  $invoice_payment_status,
+                        "created_by"                =>  $created_by,
+                        "action"                    =>  "<div class='btn-group'>
+                        <button type='button' class='btn btn-sm btn-info dropdown-toggle dropdown-icon' data-toggle='dropdown'>Action <span class='sr-only'>Toggle Dropdown</span></button>
+                        <div class='dropdown-menu' role='menu'>
+                        <a class='dropdown-item' id= '" . $id . "' href='view/" .  $id . "'  ><i class= 'fas fa-eye mr-2'></i>View Invoice</a>
+                        <a class='dropdown-item' id= '" . $id . "' href='edit/" .  $id . "'  ><i class= 'fas fa-edit mr-2'></i>Edit</a>
+                        <a class='dropdown-item' onclick='view_payments(".$id.")' href='#' ><i class='fa fa-money-bill mr-2'></i>View Payments</a><div class='dropdown-divider'>
+                        </div>
+                        <a class='dropdown-item' href='#'><i class='far fa-trash-alt mr-2 text-danger'></i>Delete</a>
+                        </div>
+                        </div>" ,
+                );
+            }// end if show account recievables
+
+
+        }
+
+        $response = array(
+            "draw" => intval($draw),
+            "iTotalRecords" => $totalRecords,
+            "iTotalDisplayRecords" => $totalRecordswithFilter,
+            "aaData" => $data_arr
+        );
+
+        return response()->json($response);
+    } //end AJAX
+
+
 
 
 }

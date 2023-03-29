@@ -20,7 +20,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">{{ __('Customer') }}</h1>
+                    <h1 class="m-0">{{ __('Invoices') }}</h1>
                 </div><!-- /.col -->
             </div><!-- /.row -->
         </div><!-- /.container-fluid -->
@@ -43,13 +43,13 @@
                                     <div class="col-md-12 ">
                                         <div class="icheck-info d-inline">
                                             <input type="checkbox" id="amount-due-check" >
-                                            <label for="amount-due-check">View Account Receivable Customers</label>
+                                            <label for="amount-due-check">View Account Receivable Invoices</label>
                                           </div>   
                                     </div>
 
                                     <div class="card-tools">
                 
-                                        <a class="btn btn-block btn-success" id="add-button" href="">
+                                        <a class="btn btn-block btn-success"  href="{{ route('invoices.create') }}">
                                             <i class="fa fa-plus"></i> New Customer
                                         </a>
                                       </div>
@@ -62,14 +62,17 @@
                         
                         <div class="card-body">
                             
-                            <table id="customerTable" class="table  table-hover">
+                            <table id="invoiceTable" class="table  table-hover">
                                 <thead>
                                 <tr> 
-                                  <th class="exportable">Customer Code</th>
-                                  <th class="exportable">Name</th>
-                                  <th class="exportable">Phone</th>
-                                  <th class="exportable">Email</th>
+                                  <th class="exportable">Invoice Date</th>
+                                  <th class="exportable">Invoice Code</th>
+                                  <th class="exportable">Customer Name</th>
+                                  <th class="exportable" style="text-align: right">Invoice Total</th>
+                                  <th class="exportable" style="text-align: right">Amount Paid</th>
                                   <th class="exportable" style="text-align: right">Amount Due</th>
+                                  <th class="exportable">Payment Staus</th>
+                                  <th class="nosort exportable">Created by </th>
                                   <th class="nosort"></th>
                                 </tr>
                                 </thead>
@@ -82,9 +85,12 @@
                                     <tr style="background-color:#f4f6f9 !important">
                                         <th class="exportable"></th>
                                         <th class="exportable"></th>
-                                        <th class="exportable"></th>
                                         <th class="exportable" style="text-align: right">Total</th>
                                         <th class="exportable" style="text-align: right"></th>
+                                        <th class="exportable" style="text-align: right"></th>
+                                        <th class="exportable" style="text-align: right"></th>
+                                        <th class="exportable"></th>
+                                        <th class="nosort exportable"></th>
                                         <th class="nosort"></th> 
                                     </tr>
                                 </tfoot>
@@ -101,7 +107,9 @@
     <!-- /.content -->
 
     <style>
-        #customerTable td:nth-child(5){text-align: right;}
+        #invoiceTable td:nth-child(4){text-align: right;}
+        #invoiceTable td:nth-child(5){text-align: right;}
+        #invoiceTable td:nth-child(6){text-align: right;}
     </style>
 
     
@@ -110,116 +118,31 @@
 
 
 @section('modals')
-        <!-- ADD CUSTOMER MODAL -->
-        <div class="modal hide fade" tabindex="-1" id="modal-create">
-            <div class="modal-dialog modal-dialog-centered">
+        
+        <!-- VIEW PAYMENTS MODAL -->  
+        <div class="modal hide fade" tabindex="-1" id="modal-payments">
+            <div class="modal-dialog  modal-lg">
                 
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">Add New Customer <span id="new_customer_code" class="text-info"></span></h5>
+                        <h5 class="modal-title">Payments</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
 
-                    <div class="modal-body">
-                        
-                        <form action = "{{ route('customers.store') }}" id="customers-create-form" method="post"> 
-                            @csrf
-                            
-                            <input type="hidden" id="count_id"  name="count_id"  value="">
-                            <input type="hidden" id="customer_code"  name="customer_code"  value="">
-
-                            <div class="form-group">
-                                <label for="customer_name">Customer Name</label>
-                                <input type="text" class="form-control form-control-border" id="customer_name" name="customer_name"  placeholder="Enter Name">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="customer_phone">Customer Phone</label>
-                                <input type="text" class="form-control form-control-border" id="customer_phone" name="customer_phone"  placeholder="Enter Phone">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="customer_email">Customer Email</label>
-                                <input type="email" class="form-control form-control-border" id="customer_email" placeholder="Enter Email">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="customer_amount_due">Amount Due</label>
-                                <input type="customer_amount_due" class="form-control form-control-border" id="customer_amount_due" placeholder="Enter Amount (eg 0.00)" value="0.00">
-                            </div>
-
-                            
-                            
-                            
-                    
-                        </form>
+                    <div class="modal-body" id="modal-payments-detail">
 
                     </div>
 
                     <div class="modal-footer justify-content-right">
                         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="createSave" >Save changes</button>
                     </div>
                 </div> 
 
             </div>  
         </div>
-
-        <!-- EDIT CUSTOMER MODAL -->  
-        <div class="modal hide fade" tabindex="-1" id="modal-edit">
-            <div class="modal-dialog modal-dialog-centered">
-                
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Edit Customer <span class="text-info" id="edit_customer_code"></span></h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-
-                    <div class="modal-body">
-                        
-                        <form action = "{{ route('customers.update') }}" id="customers-edit-form" method="post"> 
-                            @csrf
-                        
-                            <div class="form-group">
-                                <label for="customer_name">Customer Name</label>
-                                <input type="text" class="form-control form-control-border" id="customer_name" name="customer_name"  placeholder="Enter Name">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="customer_phone">Customer Phone</label>
-                                <input type="text" class="form-control form-control-border" id="customer_phone" name="customer_phone"  placeholder="Enter Phone">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="customer_email">Customer Email</label>
-                                <input type="text" class="form-control form-control-border" id="customer_email" placeholder="Enter Email">
-                            </div>
-
-                            <div class="form-group">
-                                <label for="customer_amount_due">Previous Amount Due</label>
-                                 <input type="text" class="form-control form-control-border" id="customer_amount_due" name="customer_amount_due" placeholder="Enter Previous Amount Due">
-                            </div>
-
-                            <input type="hidden" id="customer_id"  name="customer_id"  value="">
-                            
-                            
-                    
-                        </form>
-
-                    </div>
-
-                    <div class="modal-footer justify-content-right">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="editSave" >Save changes</button>
-                    </div>
-                </div> 
-
-            </div>  
-        </div>
+        
 @endsection
 
 
@@ -247,243 +170,125 @@
     <script>
         $('document').ready(function(){
 
-               //validate EDIT FORM
-              var editvalidator = $('#customers-edit-form').validate({
-                    rules: {
-                        customer_name: {
-                            required: true,
-                        },
-                        customer_phone: {
-                            required: false,
-                        },
-                        customer_email: {
-                            required: false,
-                            email: true,
-                        },
-                    },
-                    messages: {
-                        customer_email: {
-                            email: "Please enter a valid email address"
-                        },
-                    },
-                    errorElement: 'span',
-                    errorPlacement: function (error, element) {
-                        error.addClass('invalid-feedback');
-                        element.closest('.form-group').append(error);
-                    },
-                    highlight: function (element, errorClass, validClass) {
-                        $(element).addClass('is-invalid');
-                    },
-                    unhighlight: function (element, errorClass, validClass) {
-                        $(element).removeClass('is-invalid');
-                    }
-                });
+           
 
-                  //validate CREATE FORM
-              var createvalidator = $('#customers-create-form').validate({
-                    rules: {
-                        customer_name: {
-                            required: true,
-                        },
-                        customer_phone: {
-                            required: false,
-                        },
-                        customer_email: {
-                            required: false,
-                            email: true,
-                        },
-                    },
-                    messages: {
-                        customer_email: {
-                            email: "Please enter a valid email address"
-                        },
-                    },
-                    errorElement: 'span',
-                    errorPlacement: function (error, element) {
-                        error.addClass('invalid-feedback');
-                        element.closest('.form-group').append(error);
-                    },
-                    highlight: function (element, errorClass, validClass) {
-                        $(element).addClass('is-invalid');
-                    },
-                    unhighlight: function (element, errorClass, validClass) {
-                        $(element).removeClass('is-invalid');
-                    }
-                });
+            //    //validate EDIT FORM
+            //   var editvalidator = $('#customers-edit-form').validate({
+            //         rules: {
+            //             customer_name: {
+            //                 required: true,
+            //             },
+            //             customer_phone: {
+            //                 required: false,
+            //             },
+            //             customer_email: {
+            //                 required: false,
+            //                 email: true,
+            //             },
+            //         },
+            //         messages: {
+            //             customer_email: {
+            //                 email: "Please enter a valid email address"
+            //             },
+            //         },
+            //         errorElement: 'span',
+            //         errorPlacement: function (error, element) {
+            //             error.addClass('invalid-feedback');
+            //             element.closest('.form-group').append(error);
+            //         },
+            //         highlight: function (element, errorClass, validClass) {
+            //             $(element).addClass('is-invalid');
+            //         },
+            //         unhighlight: function (element, errorClass, validClass) {
+            //             $(element).removeClass('is-invalid');
+            //         }
+            //     });
 
-            /////////////////////////////////////////////
-            // Add button clicked
-            ////////////////////////////////////////////
-            $( 'body' ).on('click', "#add-button", function(e){
-                e.preventDefault();
-                
-                //ajax call
-                $.ajaxSetup({
-                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
-                });
-
-                 $.get('{{route('customers.create')}}', function (cdata) {
-                   $('#customers-create-form #count_id').val(cdata.count_id);
-                   $('#customers-create-form #customer_code').val(cdata.customer_code);
-                   $(' #new_customer_code').html(cdata.customer_code);
-                   
-                }); //end get
-
-                $('#modal-create').modal('show');
-
-            });
-
-            ////////////////////////////////////////////
-            // CREATE BUTTON CLICK TO SAVE
-            ///////////////////////////////////////////
-            $('#createSave').click(function(e){
-                e.preventDefault();
-                
-                if(!createvalidator.form()){
-                    return false;
-                };
-                
-                //submit
-                var formData = {
-                    count_id: $('#count_id').val(),
-                    customer_code: $("#customers-create-form #customer_code").val(),
-                    customer_name: $("#customers-create-form #customer_name").val(),
-                    customer_phone: $("#customers-create-form #customer_phone").val(),
-                    customer_email: $("#customers-create-form #customer_email").val(),
-                    customer_amount_due: $("#customers-create-form #customer_amount_due").val(),
-                };
-
-                $.ajaxSetup({
-                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
-                });
-
-                $.ajax({
-                    type: "POST",
-                    url: '{{ route('customers.store') }}',
-                    data: formData,
-                    dataType: "json",
-                    encode: true,
-                }).done(function (data) {
-                    if (data.status){
-                        $('#modal-create').modal('hide'); 
-                        $('#customerTable').DataTable().ajax.reload();
-                        $('#customers-create-form').trigger('reset');
-                        toastr.success(data.message);
-                    } else{
-                        toastr.error(data.message);
-                    }
-                });
-                
-            })
-            
-            
+            //       //validate CREATE FORM
+            //   var createvalidator = $('#customers-create-form').validate({
+            //         rules: {
+            //             customer_name: {
+            //                 required: true,
+            //             },
+            //             customer_phone: {
+            //                 required: false,
+            //             },
+            //             customer_email: {
+            //                 required: false,
+            //                 email: true,
+            //             },
+            //         },
+            //         messages: {
+            //             customer_email: {
+            //                 email: "Please enter a valid email address"
+            //             },
+            //         },
+            //         errorElement: 'span',
+            //         errorPlacement: function (error, element) {
+            //             error.addClass('invalid-feedback');
+            //             element.closest('.form-group').append(error);
+            //         },
+            //         highlight: function (element, errorClass, validClass) {
+            //             $(element).addClass('is-invalid');
+            //         },
+            //         unhighlight: function (element, errorClass, validClass) {
+            //             $(element).removeClass('is-invalid');
+            //         }
+            //     });
 
 
-
-            /////////////////////////////////////////////
-            // Edit Button Clicked
-            ////////////////////////////////////////////
-            $( '#customerTable' ).on('click', ".edit-button", function(e){
-
-                e.preventDefault(); 
-                
-                $('#customers-edit-form').trigger('reset');
-
-                var customer_id = $(this).attr('id');
-                $('#customers-edit-form #customer_id').val( customer_id );
-                
-                //ajax call
-                $.ajaxSetup({
-                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
-                });
-
-                //populate edit form field
-                var url = "{{ route('customers.edit', ':customer_id') }}";
-                url = url.replace(':customer_id', customer_id);
-                $.get(url, function (edata) {
-                   $('#customers-edit-form #customer_name').val(edata.customer_name);
-                   $('#customers-edit-form #customer_phone').val(edata.customer_phone);
-                   $('#customers-edit-form #customer_email').val(edata.customer_email);
-                   $('#customers-edit-form #customer_amount_due').val(edata.customer_amount_due);
-                   $('#edit_customer_code').html(edata.customer_code);
-                }); //end get
-
-                
-                $('#modal-edit').modal('show'); 
-
-            });  // END EDIT BUTTON CLICKED
-
-
-            ////////////////////////////////////////////
-            // EDIT BUTTON CLICK TO SAVE
-            ///////////////////////////////////////////
-            $('#editSave').click(function(e){
-                e.preventDefault();
-                
-                if(!editvalidator.form()){
-                    return false;
-                };
-                
-                //submit
-                var formData = {
-                    id: $('#customer_id').val(),
-                    customer_name: $("#customers-edit-form #customer_name").val(),
-                    customer_phone: $("#customers-edit-form #customer_phone").val(),
-                    customer_email: $("#customers-edit-form #customer_email").val(),
-                    customer_amount_due: $("#customers-edit-form #customer_amount_due").val(),
-                };
-
-                $.ajaxSetup({
-                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
-                });
-
-                $.ajax({
-                    type: "POST",
-                    url: '{{ route('customers.update') }}',
-                    data: formData,
-                    dataType: "json",
-                    encode: true,
-                }).done(function (data) {
-                    if (data.status){
-                        $('#modal-edit').modal('hide'); 
-                        $('#customerTable').DataTable().ajax.reload();
-                        toastr.success(data.message);
-                    } else{
-                        toastr.error(data.message);
-                    }
-                });
-                
-            })
-            
-
+        
           
             /////////////////////////////////////////////
-            //Fetch all Customer Records for Datatable
+            //Fetch all Invoice Records for Datatable
             ////////////////////////////////////////////
             function load_datatable(show_account_receivable ='unchecked'){
-                table =   $('#customerTable').DataTable({
+                table =   $('#invoiceTable').DataTable({
                     processing: true,
                     serverSide: true,
                     responsive: true, 
                     lengthChange: false,
                     autoWidth: false,
                     info: true,
+                    order: [[1, 'desc']],
                     ajax: {
-                        url: "{{route('customers.ajax')}}",
+                        url: "{{route('invoices.ajax')}}",
                         data: {
                             'show_account_receivable': show_account_receivable
                         }
                     },
                     columns: [
-                        { data: 'customer_code' },
+                        { data: 'invoice_date' },
+                        { data: 'invoice_code' },
                         { data: 'customer_name' },
-                        { data: 'customer_phone' },
-                        { data: 'customer_email' },
-                        { data: 'customer_amount_due', 
+                        { data: 'invoice_grand_total', 
                         "render": function ( data, type, row, meta ) {
                                          return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
                                   }
                         },
+                        { data: 'invoice_amount_paid', 
+                        "render": function ( data, type, row, meta ) {
+                                         return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
+                                  }
+                        },
+                        { data: 'invoice_amount_due', 
+                        "render": function ( data, type, row, meta ) {
+                                         return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
+                                  }
+                        },
+                        { data: 'payment_status', 
+                        "render": function ( data, type, row, meta ) {
+                                        if (data == "Unpaid"){
+                                            return ( "<span class='badge badge-danger'>"+data+"</span>" );
+                                        } else if (data == "Partial"){
+                                            return ( "<span class='badge badge-warning'>"+data+"</span>" );
+                                        } else {
+                                            return ( "<span class='badge badge-success'>"+data+"</span>" );
+                                        }
+                                        
+                                  }
+                        },
+                        { data: 'created_by' },
                         { data: 'action'},
                     ],
                     language: {
@@ -492,7 +297,7 @@
                     aoColumnDefs: [
                         
                         {bSortable: false,'aTargets': ['nosort']},
-                        {serachable: false, "aTargets": ['nosort'] }
+                        {searchable: false, "aTargets": ['nosort'] }
                     ],
                     buttons: [
                                 {extend: "copy", footer:true, exportOptions: {columns: [ '.exportable' ]} },
@@ -513,13 +318,22 @@
                                         var sum = 0;
                                         var formated = 0;
                                         //to show first th
-                                        $(api.column(3).footer()).html('Total');
+                                        $(api.column(2).footer()).html('Total');
+
+                                            sum = api.column(3, {page:'current'}).data().sum();
+                                            //to format this sum
+                                            formated = parseFloat(sum).toLocaleString(undefined, {minimumFractionDigits:2});
+                                            $(api.column(3).footer()).html('₦ '+ formated);
 
                                             sum = api.column(4, {page:'current'}).data().sum();
-
                                             //to format this sum
                                             formated = parseFloat(sum).toLocaleString(undefined, {minimumFractionDigits:2});
                                             $(api.column(4).footer()).html('₦ '+ formated);
+
+                                            sum = api.column(5, {page:'current'}).data().sum();
+                                            //to format this sum
+                                            formated = parseFloat(sum).toLocaleString(undefined, {minimumFractionDigits:2});
+                                            $(api.column(5).footer()).html('₦ '+ formated);
                                         
 		                             }
                         
@@ -527,9 +341,10 @@
                 }); // end DataTable
             
                 $("#amount-due-check").change(function() {
-                    $('#customerTable').DataTable().destroy();
+                    $('#invoiceTable').DataTable().destroy();
                     if(this.checked){
                         load_datatable('checked');
+                         
                     } else {
                         load_datatable();//default unchecked
                     }
@@ -537,15 +352,98 @@
                 });
             } // end load_datatable
              
-
             load_datatable();
 
             //Positive Decimal
-             $("#customer_amount_due").inputFilter(function(value) {
+            $("#customer_amount_due").inputFilter(function(value) {
                  return /^\d*[.]?\d{0,2}$/.test(value); 
             });
 
         }); //end Document Ready
+
+
+
+        ////////////////////////////////////////
+        /// VIEW PAYMENTS
+        ////////////////////////////////////
+                            
+        function view_payments(id){
+                //ajax call
+                 $.ajaxSetup({
+                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
+                });
+
+                $.ajax({
+                    url: "{{ route('invoices.paymentdetails') }}",
+                    type: "get", //send it through get method
+                    data: { 
+                        id: id, 
+                    },
+                    success: function(response) {
+                        $('#modal-payments-detail').html(response);
+                        $('#modal-payments').modal('show');
+                    },
+                    error: function(xhr) {
+                        //Do Something to handle error
+                    }
+                });
+                
+        }    
+        
+        
+         ////////////////////////////////////////
+        /// DELETE PAYMENT
+        ////////////////////////////////////
+                            
+        function delete_payment(id){
+            
+            if (confirm("Do you want to delete the Payment?") == true) {
+                $.ajax({
+                    url: "/payments/delete/"+id,
+                    type: "get", //send it through get method
+                    data: { 
+                        'id': id, 
+                    },
+                    success: function(response) {
+                        if (response.status == 1){
+                            $('#payment_'+id).remove(); 
+
+                            var grand_total_row = parseFloat($('#grand_total').text().replace(/,/g, ''));
+                            var total_payment_row = 0;
+
+                            $('.payment_row').each(function(){
+                                total_payment_row = total_payment_row + parseFloat($(this).text().replace(/,/g, ''));
+                            });
+
+                            console.log (grand_total_row);
+                            console.log (total_payment_row);
+                            console.log (grand_total_row - total_payment_row);
+
+                            $('#total_payment').html(total_payment_row.toLocaleString(undefined, {minimumFractionDigits:2}));
+                            $('#amount_due').html((grand_total_row - total_payment_row).toLocaleString(undefined, {minimumFractionDigits:2}) );
+
+                            failed_sound.currentTime = 0;
+                            failed_sound.play();
+
+                            $('#invoiceTable').DataTable().ajax.reload();                            
+                            toastr.success(response.message);
+                            
+                        } else {
+                            toastr.error(response.message);
+                        }
+                    
+                    },
+                    error: function(xhr) {
+                        toastr.error('Ooopsy! Something unintended just happened. ')
+                    }
+                }); // end ajax
+            }
+                
+        }    
+
+
+
+
 
         var AdminLTEOptions = {
     /*https://adminlte.io/themes/AdminLTE/documentation/index.html*/
@@ -553,6 +451,11 @@
     navbarMenuHeight: "200px", //The height of the inner menu
     animationSpeed: 250,
   };
+
+
+
+           
+
         
     </script>
 @endsection

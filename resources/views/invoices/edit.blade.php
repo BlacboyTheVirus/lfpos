@@ -365,7 +365,7 @@
                                 <div class="p-4 text-center">
                                     
                                     <div type="button" class="btn btn-primary" id="invoice_save"><i class="fas fa-save"></i> Save </div>
-                                    <div type="button" class="btn btn-danger" data-toggle="modal" data-target="#InvoiceModal">Preview Invoice</div>
+                                    <a class="btn btn-default"  href="{{ url()->previous() }}">Cancel</a>
                                     
                                 </div>
                             </div>
@@ -498,6 +498,7 @@
                 // $('#invoice-form').submit();
                 // exit;
 
+                
                 // check if any item has been added to invoice
                 var count = $('#invoice-items tr').length;
                 if(count < 1){
@@ -517,7 +518,11 @@
                         type:"POST",
                         url: "{{ route('invoices.update') }}",
                         data:$("#invoice-form").serialize(), //only input
+                        beforeSend: function(){
+                            $(".card-body").append('<div class="overlay"><i class="fas fa-circle-notch fa-spin text-lg"></i></div>');
+                        },
                         success: function(response){
+                            $(".overlay").remove();
                             if (response.status != 0){
                                 toastr.success(response.message);
                                 setTimeout(() => {
@@ -525,8 +530,10 @@
                                 }, 1000);
                             }  else {
                                 toastr.error(response.message);
+                                
                             }
 
+                            
                         }
                     });
 
@@ -824,87 +831,39 @@
 
   function delete_payment(id){
 
-    if (confirm("Do you want to delete the Payment?") == true) {
-                        $.ajax({
-                            url: "/payments/delete/"+id,
-                            type: "get", //send it through get method
-                            data: { 
-                                'id': id, 
-                            },
-                            success: function(response) {
-                                if (response.status == 1){
-                                   $('#payment_'+id).remove(); 
-                                   var total_payment_row = 0;
-                                   $('.payment_row').each(function(){
-                                        total_payment_row = total_payment_row + parseFloat($(this).text().replace(/,/g, ''));
-                                   });
+        if (confirm("Do you want to delete the Payment?") == true) {
+            $.ajax({
+                url: "/payments/delete/"+id,
+                type: "get", //send it through get method
+                data: { 
+                    'id': id, 
+                },
+                success: function(response) {
+                    if (response.status == 1){
+                        $('#payment_'+id).remove(); 
+                        var total_payment_row = 0;
+                        $('.payment_row').each(function(){
+                            total_payment_row = total_payment_row + parseFloat($(this).text().replace(/,/g, ''));
+                        });
 
-                                   $('#total_payment').html(total_payment_row);
+                        $('#total_payment').html(total_payment_row);
 
-                                    get_amount_due();
-                                    toastr.success(response.message);
-                                    
-                                } else {
-                                    toastr.error(response.message);
-                                }
-                            
-                            },
-                            error: function(xhr) {
-                                toastr.error('Ooopsy! Something unintended just happened. ')
-                            }
-                        }); // end ajax
-         }
-
-
-
-
-    //     $.confirm({
-    //         title: 'Delete Payment!',
-    //         content: 'Do you want to proceed? You cannot undo.',
-    //         theme: 'material',
-    //         icon: 'fa fa-warning',
-    //         type: 'red',
-        
-    //         buttons: {
-                
-    //             'confirm': {
-    //                 text: 'Proceed',
-    //                 btnClass: 'btn-red',
-    //                 action: function(){
+                        get_amount_due();
+                        toastr.success(response.message);
                         
-    //                     $.ajax({
-    //                         url: "/payments/delete/"+id,
-    //                         type: "get", //send it through get method
-    //                         data: { 
-    //                             'id': id, 
-    //                         },
-    //                         success: function(response) {
-    //                             if (response.status == 1){
-    //                                 $('#payment_'+id).remove();
-    //                                 get_amount_due();
-    //                                 toastr.success(response.message);
-                                    
-    //                             } else {
-    //                                 toastr.error(response.message);
-    //                             }
-                            
-    //                         },
-    //                         error: function(xhr) {
-    //                             toastr.error('Ooopsy! Something unintended just happened. ')
-    //                         }
-    //                     }); // end ajax
-
-
-    //                 }
-    //             },
-    //             cancel: function(){
-    //             }
-    //         }
-        
+                    } else {
+                        toastr.error(response.message);
+                    }
                 
-    // }); //confirm 
-  
-            
+                },
+                error: function(xhr) {
+                    toastr.error('Ooopsy! Something unintended just happened. ')
+                }
+            }); // end ajax
+        }
+
+
+
      
   } // end delete_payment()
 

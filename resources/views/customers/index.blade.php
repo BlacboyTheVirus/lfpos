@@ -69,7 +69,9 @@
                                   <th class="exportable">Name</th>
                                   <th class="exportable">Phone</th>
                                   <th class="exportable">Email</th>
-                                  <th class="exportable" style="text-align: right">Amount Due</th>
+                                  <th class="exportable" style="text-align: right">Previous Due</th>
+                                  <th class="exportable" style="text-align: right">Sales Due</th>
+                                  <th class="exportable" style="text-align: right">Total Due</th>
                                   <th class="nosort"></th>
                                 </tr>
                                 </thead>
@@ -85,6 +87,8 @@
                                         <th class="exportable"></th>
                                         <th class="exportable" style="text-align: right">Total</th>
                                         <th class="exportable" style="text-align: right"></th>
+                                        <th class="exportable" style="text-align: right"></th>
+                                        <th class=" exportable" style="text-align: right"></th>
                                         <th class="nosort"></th> 
                                     </tr>
                                 </tfoot>
@@ -102,6 +106,8 @@
 
     <style>
         #customerTable td:nth-child(5){text-align: right;}
+        #customerTable td:nth-child(6){text-align: right;}
+        #customerTable td:nth-child(7){text-align: right;}
     </style>
 
     
@@ -220,6 +226,81 @@
 
             </div>  
         </div>
+
+      
+
+
+        <!-- VIEW PAY PREVIOUS DUE  MODAL -->  
+        <div class="modal hide fade" tabindex="-1" id="modal-paypreviousdue">
+            <div class="modal-dialog">
+                
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Pay Previous Due</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body">
+                            <form id="paydue_form" method="post">
+                                <input type="hidden" id="prev_customer_id" name="prev_customer_id" value="">
+                                <label class="text-md">Previous Due: <b>N <span id="previous_amt_due"></span></b> </label>
+                                <div class="row">
+                                    <div class="form-group col-md-6">
+                                        <label for="amount_paid">Amount Paid</label>
+                                        <input type="text" class="form-control form-control-border" id="prev_amount_paid" name="prev_amount_paid" placeholder="Enter Amount Paid" aria-invalid="false">
+                                    </div>
+
+                                    <div class="form-group col-md-6">
+                                        <label for="prev_payment_method">Payment Method</label>
+                                        <select type="text" class="form-control form-control-border" id="prev_payment_method" name="prev_payment_method"  aria-invalid="false">
+                                            <option value="">--Select Payment Option --</option>
+                                            <option value="cash">Cash</option>
+                                            <option value="bank">Bank</option>
+                                            <option value="pos">POS</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            </form>
+                    </div>
+
+                    <div class="modal-footer justify-content-right">
+                        
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="paySave">Save </button>
+                    </div>
+                </div> 
+
+            </div>  
+        </div>
+
+        <!-- VIEW PAYMENTS MODAL -->  
+        <div class="modal hide fade" tabindex="-1" id="modal-transactions">
+            <div class="modal-dialog  modal-lg">
+                
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Transactions</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="modal-body" id="modal-transactions-detail">
+
+                    </div>
+
+                    <div class="modal-footer justify-content-right">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div> 
+
+            </div>  
+        </div>
+
+
 @endsection
 
 
@@ -247,7 +328,10 @@
     <script>
         $('document').ready(function(){
 
-               //validate EDIT FORM
+
+            ///////////////////////////////////////
+            // Validate EDIT FORM
+            ///////////////////////////////////////
               var editvalidator = $('#customers-edit-form').validate({
                     rules: {
                         customer_name: {
@@ -279,7 +363,34 @@
                     }
                 });
 
-                  //validate CREATE FORM
+            /////////////////////////////////////////
+            // Validate PAY PREVIOUS DUE  FORM
+            ////////////////////////////////////////
+              var payvalidator = $('#paydue_form').validate({
+                    rules: {
+                        prev_amount_paid: {
+                            required: true,
+                        },
+                        prev_payment_method: {
+                            required: true,
+                        },
+                    },
+                    errorElement: 'span',
+                    errorPlacement: function (error, element) {
+                        error.addClass('invalid-feedback');
+                        element.closest('.form-group').append(error);
+                    },
+                    highlight: function (element, errorClass, validClass) {
+                        $(element).addClass('is-invalid');
+                    },
+                    unhighlight: function (element, errorClass, validClass) {
+                        $(element).removeClass('is-invalid');
+                    }
+                });
+
+            //////////////////////////
+            //validate CREATE FORM
+            //////////////////////////
               var createvalidator = $('#customers-create-form').validate({
                     rules: {
                         customer_name: {
@@ -333,6 +444,9 @@
 
             });
 
+
+           
+
             ////////////////////////////////////////////
             // CREATE BUTTON CLICK TO SAVE
             ///////////////////////////////////////////
@@ -374,8 +488,54 @@
                     }
                 });
                 
-            })
+            });
+
             
+
+             ////////////////////////////////////////////
+            // PAY PREVIOUS SAVE  BUTTON CLICK
+            ///////////////////////////////////////////
+            $('#paySave').click(function(e){
+                e.preventDefault();
+                
+                if(!payvalidator.form()){
+                    return false;
+                };
+
+                if( $('#prev_amount_paid').val() < parseFloat($('#previous_amt_due').text().replace(/,/g, ''))  ){
+                    toastr.error("Amount paid must NOT be less than amount due.");
+                    return false;
+                }
+                
+                //submit
+                var formData = {
+                    customer_id: $("#paydue_form #prev_customer_id").val(),
+                    prev_amt_paid: $("#paydue_form #prev_amount_paid").val(),
+                    prev_payment_method: $("#paydue_form #prev_payment_method").val(),
+                };
+
+                $.ajaxSetup({
+                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
+                });
+
+                $.ajax({
+                    type: "POST",
+                    url: '{{ route('customers.payprevious') }}',
+                    data: formData,
+                    dataType: "json",
+                    encode: true,
+                }).done(function (data) {
+                    if (data.status){
+                        $('#modal-paypreviousdue').modal('hide'); 
+                        $('#customerTable').DataTable().ajax.reload();
+                        $('#paydue_form').trigger('reset');
+                        toastr.success(data.message);
+                    } else{
+                        toastr.error(data.message);
+                    }
+                });
+                
+            })
             
 
 
@@ -406,16 +566,15 @@
                    $('#customers-edit-form #customer_email').val(edata.customer_email);
                    $('#customers-edit-form #customer_amount_due').val(edata.customer_amount_due);
                    $('#edit_customer_code').html(edata.customer_code);
-                }); //end get
 
-                
-                $('#modal-edit').modal('show'); 
+                   $('#modal-edit').modal('show'); 
+                }); //end get
 
             });  // END EDIT BUTTON CLICKED
 
 
             ////////////////////////////////////////////
-            // EDIT BUTTON CLICK TO SAVE
+            // EDIT BUTTON SAVE CLICKED
             ///////////////////////////////////////////
             $('#editSave').click(function(e){
                 e.preventDefault();
@@ -426,7 +585,7 @@
                 
                 //submit
                 var formData = {
-                    id: $('#customer_id').val(),
+                    customer_id: $('#customers-edit-form #customer_id').val(),
                     customer_name: $("#customers-edit-form #customer_name").val(),
                     customer_phone: $("#customers-edit-form #customer_phone").val(),
                     customer_email: $("#customers-edit-form #customer_email").val(),
@@ -453,8 +612,8 @@
                     }
                 });
                 
-            })
-            
+            });
+
 
           
             /////////////////////////////////////////////
@@ -480,9 +639,22 @@
                         { data: 'customer_phone' },
                         { data: 'customer_email' },
                         { data: 'customer_amount_due', 
-                        "render": function ( data, type, row, meta ) {
+                          sType: "numeric",
+                          render: function ( data, type, row, meta ) {
                                          return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
-                                  }
+                          }
+                        },
+                        { data: 'customer_invoice_due', 
+                          sType: "numeric",
+                          render: function ( data, type, row, meta ) {
+                                         return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
+                          }
+                        },
+                        { data: 'total_dues', 
+                          sType: "numeric",
+                          render: function ( data, type, row, meta ) {
+                                         return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
+                          }
                         },
                         { data: 'action'},
                     ],
@@ -492,7 +664,7 @@
                     aoColumnDefs: [
                         
                         {bSortable: false,'aTargets': ['nosort']},
-                        {serachable: false, "aTargets": ['nosort'] }
+                        {searchable: false, "aTargets": ['nosort'] }
                     ],
                     buttons: [
                                 {extend: "copy", footer:true, exportOptions: {columns: [ '.exportable' ]} },
@@ -502,7 +674,7 @@
                                 {extend: 'print', footer:true, exportOptions: {columns: [ '.exportable' ]} }, 
                                 "colvis"
                                 ],
-                    sDom: '<"row" <"#top.col-md-6"> <"col-md-6"f> > rt <"row" <"col-md-6"i> <"col-md-6"p> ><"clear">',
+                    sDom: '<"row" <"#top.col-md-6"> <"col-md-6"f> > rt <"row" <"col-md-4"i> <"col-md-4"l> <"col-md-4"p> ><"clear">',
                     "initComplete": function(settings, json) {
                                     $(this).DataTable().buttons().container()
                                     .appendTo( ('#top'));
@@ -516,10 +688,19 @@
                                         $(api.column(3).footer()).html('Total');
 
                                             sum = api.column(4, {page:'current'}).data().sum();
-
                                             //to format this sum
                                             formated = parseFloat(sum).toLocaleString( "en-US", {minimumFractionDigits:2});
                                             $(api.column(4).footer()).html('₦ '+ formated);
+
+                                            sum = api.column(5, {page:'current'}).data().sum();
+                                            //to format this sum
+                                            formated = parseFloat(sum).toLocaleString( "en-US", {minimumFractionDigits:2});
+                                            $(api.column(5).footer()).html('₦ '+ formated);
+
+                                             sum = api.column(6, {page:'current'}).data().sum();
+                                            //to format this sum
+                                            formated = parseFloat(sum).toLocaleString( "en-US", {minimumFractionDigits:2});
+                                            $(api.column(6).footer()).html('₦ '+ formated);
                                         
 		                             }
                         
@@ -540,7 +721,7 @@
             load_datatable();
 
             //Positive Decimal
-             $("#customer_amount_due").inputFilter(function(value) {
+             $("#customer_amount_due , #prev_amount_paid" ).inputFilter(function(value) {
                  return /^\d*[.]?\d{0,2}$/.test(value); 
             });
 
@@ -552,6 +733,140 @@
     navbarMenuHeight: "200px", //The height of the inner menu
     animationSpeed: 250,
   };
+        
+
+    //////////////////////////////////////////////
+    // DELETE CUSTOMER
+    /////////////////////////////////////////////
+    function delete_customer(id){
+        if (confirm("Do you want to delete the Customer? All Invoices will be moved to Walk-In-Customer") == true) {
+            $.ajax({
+                url: "/customers/delete/"+id,
+                type: "get", //send it through get method
+                success: function(response) {
+                    if (response.status == 1){
+                        $('#customerTable').DataTable().ajax.reload();
+                        toastr.success(response.message);
+                        
+                    } else {
+                        toastr.error(response.message);
+                    }
+                
+                },
+                error: function(xhr) {
+                    toastr.error('Ooopsy! Something unintended just happened. ')
+                }
+            }); // end ajax
+        }
+
+    }
+
+  
+    //////////////////////////////////////////////
+    // Delete Invoice 
+    //////////////////////////////////////////////
+
+    function delete_invoice(id){
+        if (confirm("Do you want to delete the Invoice?") == true) {
+            $.ajax({
+                url: "/invoices/delete/"+id,
+                type: "get", //send it through get method
+                success: function(response) {
+                    if (response.status == 1){
+                        $('#invoice_'+id).remove(); 
+                        var total_invoice_row = 0;
+                        var total_payment_row = 0;
+                        var total_due_row = 0;
+                        $('.grandtotal_row').each(function(){
+                            total_invoice_row  +=  parseFloat($(this).text().replace(/,/g, ''));
+                        });
+                        $('.payment_row').each(function(){
+                            total_payment_row   +=  parseFloat($(this).text().replace(/,/g, ''));
+                        });
+                        $('.amountdue_row').each(function(){
+                            total_due_row  +=  parseFloat($(this).text().replace(/,/g, ''));
+                        });
+
+                        
+                        $('.add_total_invoice').html('₦ '+parseFloat(total_invoice_row).toLocaleString(undefined, {minimumFractionDigits:2}));
+                        $('.add_total_payment').html('₦ '+parseFloat(total_payment_row).toLocaleString(undefined, {minimumFractionDigits:2}));
+                        $('.add_total_due').html('₦ '+parseFloat(total_due_row).toLocaleString(undefined, {minimumFractionDigits:2}));
+                        
+                        $('#customerTable').DataTable().ajax.reload();
+
+                        toastr.success(response.message);
+                        
+                    } else {
+                        toastr.error(response.message);
+                    }
+                
+                },
+                error: function(xhr) {
+                    toastr.error('Ooopsy! Something unintended just happened. ')
+                }
+            }); // end ajax
+        }
+
+    } // end delete_payment()
+
+
+    ////////////////////////////////////////
+    /// VIEW PAYMENTS
+    ////////////////////////////////////////
+                            
+        function view_transactions(id){
+                //ajax call
+                 $.ajaxSetup({
+                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
+                });
+
+                $.ajax({
+                    url: "{{ route('customers.transactions') }}",
+                    type: "get", //send it through get method
+                    data: { 
+                        id: id, 
+                    },
+                    success: function(response) {
+                        $('#modal-transactions-detail').html(response);
+                        $('#modal-transactions').modal('show');
+                    },
+                    error: function(xhr) {
+                        //Do Something to handle error
+                    }
+                });
+                
+        }   
+
+
+
+         ////////////////////////////////////////
+        /// PAY PREVIOUS
+        ////////////////////////////////////
+                            
+        function show_pay_previous(id){
+                //ajax call
+                 $.ajaxSetup({
+                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
+                });
+
+                $.ajax({
+                    url: "{{ route('customers.showpayprevious') }}",
+                    type: "get", //send it through get method
+                    data: { 
+                        id: id, 
+                    },
+                    success: function(response) {
+                        $('#previous_amt_due').html(response);
+                        $('#prev_customer_id').val(id);                        
+                        $('#modal-paypreviousdue').modal('show');
+                    },
+                    error: function(xhr) {
+                        //Do Something to handle error
+                    }
+                });
+                
+        }   
+
         
     </script>
 @endsection

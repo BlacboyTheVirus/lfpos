@@ -262,7 +262,7 @@
                                 <div class="p-4 text-center">
                                     
                                     <div type="button" class="btn btn-primary" id="invoice_save"> Save </div>
-                                    <div type="button" class="btn btn-danger" data-toggle="modal" data-target="#InvoiceModal">Preview Invoice</div>
+                                    <a class="btn btn-default"  href="{{ url()->previous() }}">Cancel</a>
                                     
                                 </div>
                             </div>
@@ -283,9 +283,6 @@
     <!-- /.content -->
 
 @endsection
-
-
-
 
 
 
@@ -461,6 +458,9 @@
             //  ADD JOB TO QUEUE ON CLICK
             /////////////////////////////////////////////////////////////
             $('#products-list').on('click', '.add-product', function () {
+
+                success_sound.currentTime = 0;
+                success_sound.play();
                 
                 default_w = 1; 
                 default_h = 1;
@@ -722,8 +722,9 @@
     ///////////////////////////////////////////////////
     function removeitem(id){
         $('#item-'+id).remove();
-         count =count-1;
         calculatetotal();
+        failed_sound.currentTime = 0;
+        failed_sound.play();
     }
 
 
@@ -811,3 +812,7 @@
         
     </script>
 @endsection
+
+
+
+
