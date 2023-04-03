@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
   <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
   <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+  <link rel="stylesheet" href="{{ asset('plugins/datatables-fixedheader/css/fixedHeader.bootstrap4.min.css') }}">
 
   <!-- iCheck for checkboxes and radio inputs -->
   <link rel="stylesheet" href="{{ asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
@@ -138,7 +139,7 @@
 
                             <div class="form-group">
                                 <label for="customer_name">Customer Name</label>
-                                <input type="text" class="form-control form-control-border" id="customer_name" name="customer_name"  placeholder="Enter Name">
+                                <input type="text" class="form-control form-control-border basicAutoComplete" id="customer_name" name="customer_name"  placeholder="Enter Name">
                             </div>
 
                             <div class="form-group">
@@ -319,6 +320,11 @@
     <script src="{{ asset('plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
     <script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+
+    <script src="{{ asset('plugins/datatables-fixedheader/js/dataTables.fixedHeader.min.js') }}"></script>
+    <script src="{{ asset('plugins/datatables-fixedheader/js/fixedHeader.bootstrap4.min.js') }}"></script>
+
+
     <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.11.5/api/sum().js"></script>
 
     <!-- Toastr -->
@@ -624,7 +630,11 @@
                     processing: true,
                     serverSide: true,
                     responsive: true, 
-                    lengthChange: false,
+                    fixedHeader: {
+                    header: true,
+                        headerOffset: $('.main-header').height()+15
+                    },
+                    lengthChange: true,
                     autoWidth: false,
                     info: true,
                     ajax: {
@@ -674,7 +684,7 @@
                                 {extend: 'print', footer:true, exportOptions: {columns: [ '.exportable' ]} }, 
                                 "colvis"
                                 ],
-                    sDom: '<"row" <"#top.col-md-6"> <"col-md-6"f> > rt <"row" <"col-md-4"i> <"col-md-4"l> <"col-md-4"p> ><"clear">',
+                    dom: '<"row" <"col-md-3"l> <"#top.col-md-6">  <"col-md-3"f> > rt <"row"  <"col-md-6"i> <"col-md-6"p> ><"clear">',
                     "initComplete": function(settings, json) {
                                     $(this).DataTable().buttons().container()
                                     .appendTo( ('#top'));
@@ -703,19 +713,11 @@
                                             $(api.column(6).footer()).html('₦ '+ formated);
                                         
 		                             }
-                        
-                   
+
+                                    
                 }); // end DataTable
-            
-                $("#amount-due-check").change(function() {
-                    $('#customerTable').DataTable().destroy();
-                    if(this.checked){
-                        load_datatable('checked');
-                    } else {
-                        load_datatable();//default unchecked
-                    }
-                    
-                });
+
+                            
             } // end load_datatable
             
             load_datatable();
@@ -725,14 +727,23 @@
                  return /^\d*[.]?\d{0,2}$/.test(value); 
             });
 
+            $("#amount-due-check").change(function() {
+                    $('#customerTable').DataTable().destroy();
+                    if(this.checked){
+                        load_datatable('checked');
+                    } else {
+                        load_datatable();//default unchecked
+                    }
+                    
+                });
+
         }); //end Document Ready
 
         var AdminLTEOptions = {
-    /*https://adminlte.io/themes/AdminLTE/documentation/index.html*/
-    sidebarExpandOnHover: true,
-    navbarMenuHeight: "200px", //The height of the inner menu
-    animationSpeed: 250,
-  };
+            sidebarExpandOnHover: true,
+            navbarMenuHeight: "200px", //The height of the inner menu
+            animationSpeed: 250,
+        };
         
 
     //////////////////////////////////////////////

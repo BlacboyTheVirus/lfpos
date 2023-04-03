@@ -25,19 +25,19 @@ class DatabaseSeeder extends Seeder
         //     'email' => 'test@example.com',
         // ]);
 
-        User::create([
-            'name'      =>  'Admin',
-            'email'     =>  'admin@gmail.com',
-            'password'  =>  bcrypt('password'),
-            'role'      =>  'admin'
-        ]);
+        // User::create([
+        //     'name'      =>  'Admin',
+        //     'email'     =>  'admin@gmail.com',
+        //     'password'  =>  bcrypt('password'),
+        //     'role'      =>  'admin'
+        // ]);
 
-        User::create([
-            'name'      =>  'User',
-            'email'     =>  'user@gmail.com',
-            'password'  =>  bcrypt('password'),
-            'role'      =>  'user'
-        ]);
+        // User::create([
+        //     'name'      =>  'User',
+        //     'email'     =>  'user@gmail.com',
+        //     'password'  =>  bcrypt('password'),
+        //     'role'      =>  'user'
+        // ]);
 
 
 
@@ -73,17 +73,17 @@ class DatabaseSeeder extends Seeder
             'status'            =>  1
         ]);
 
-        Customer::create([
+        // Customer::create([
             
-            'count_id'     =>  1,
-            'customer_code'      =>  'CU-0001',
-            'customer_name'     =>  'Walk-In Customer',
-            'customer_phone'    =>  NULL,
-            'customer_email'    =>  NULL,
-            'customer_amount_due'    => 0.00,
-            'created_by'    =>  'Admin'
+        //     'count_id'     =>  1,
+        //     'customer_code'      =>  'CU-0001',
+        //     'customer_name'     =>  'Walk-In Customer',
+        //     'customer_phone'    =>  NULL,
+        //     'customer_email'    =>  NULL,
+        //     'customer_amount_due'    => 0.00,
+        //     'created_by'    =>  'Admin'
 
-        ]);
+        // ]);
 
        
 

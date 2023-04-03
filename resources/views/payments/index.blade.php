@@ -21,7 +21,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1 class="m-0">{{ __('Invoices') }}</h1>
+                    <h1 class="m-0">{{ __('Payments') }}</h1>
                 </div><!-- /.col -->
             </div><!-- /.row -->
         </div><!-- /.container-fluid -->
@@ -44,15 +44,13 @@
                                     <div class="col-md-12 ">
                                         <div class="icheck-info d-inline">
                                             <input type="checkbox" id="amount-due-check" >
-                                            <label for="amount-due-check">View Account Receivable Invoices</label>
+                                            <label></label>
                                           </div>   
                                     </div>
 
                                     <div class="card-tools">
                 
-                                        <a class="btn btn-block btn-success"  href="{{ route('invoices.create') }}">
-                                            <i class="fa fa-plus"></i> New Invoice
-                                        </a>
+                                        &nbsp;
                                       </div>
 
                                 </div>
@@ -63,19 +61,20 @@
                         
                         <div class="card-body">
                             
-                            <table id="invoiceTable" class="table  table-hover">
+                            <table id="paymentTable" class="table  table-hover">
                                 <thead>
-                                <tr> 
-                                  <th class="exportable">Invoice Date</th>
-                                  <th class="exportable">Invoice Code</th>
-                                  <th class="exportable">Customer Name</th>
-                                  <th class="exportable" style="text-align: right">Invoice Total</th>
-                                  <th class="exportable" style="text-align: right">Amount Paid</th>
-                                  <th class="exportable" style="text-align: right">Amount Due</th>
-                                  <th class="exportable">Payment Staus</th>
-                                  <th class="nosort exportable">Created by </th>
-                                  <th class="nosort"></th>
-                                </tr>
+                                    <tr> 
+                                    <th class="exportable">Payment Date</th>
+                                    <th class="exportable" width="15%">Customer Name</th>
+                                    <th class="exportable">Invoice Code</th>
+                                    <th class="exportable"  style="text-align: right" width="15%">Amount</th>
+                                    <th class="exportable"  style="text-align: center" >Payment Type</th>
+                                    <th class="exportable">Note</th>
+                                    <th class="nosort exportable">Created by </th>
+                                    <th class="nosort"></th>
+
+                                    
+                                    </tr>
                                 </thead>
 
                                 <tbody>
@@ -88,9 +87,8 @@
                                         <th class="exportable"></th>
                                         <th class="exportable" style="text-align: right">Total</th>
                                         <th class="exportable" style="text-align: right"></th>
-                                        <th class="exportable" style="text-align: right"></th>
-                                        <th class="exportable" style="text-align: right"></th>
-                                        <th class="exportable"></th>
+                                        <th class="exportable" ></th>
+                                        <th class="exportable" ></th>
                                         <th class="nosort exportable"></th>
                                         <th class="nosort"></th> 
                                     </tr>
@@ -108,9 +106,10 @@
     <!-- /.content -->
 
     <style>
-        #invoiceTable td:nth-child(4){text-align: right;}
-        #invoiceTable td:nth-child(5){text-align: right;}
-        #invoiceTable td:nth-child(6){text-align: right;}
+        #paymentTable td:nth-child(3){text-align: right;}
+        #paymentTable td:nth-child(4){text-align: right;}
+        #paymentTable td:nth-child(5){text-align: center;}
+       
     </style>
 
     
@@ -119,30 +118,6 @@
 
 
 @section('modals')
-        
-        <!-- VIEW PAYMENTS MODAL -->  
-        <div class="modal hide fade" tabindex="-1" id="modal-payments">
-            <div class="modal-dialog  modal-lg">
-                
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Payments</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-
-                    <div class="modal-body" id="modal-payments-detail">
-
-                    </div>
-
-                    <div class="modal-footer justify-content-right">
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                </div> 
-
-            </div>  
-        </div>
         
 @endsection
 
@@ -178,8 +153,8 @@
             /////////////////////////////////////////////
             //Fetch all Invoice Records for Datatable
             ////////////////////////////////////////////
-            function load_datatable(show_account_receivable ='unchecked'){
-                table =   $('#invoiceTable').DataTable({
+            function load_datatable(){
+                table =   $('#paymentTable').DataTable({
                     processing: true,
                     serverSide: true,
                     responsive: true, 
@@ -190,45 +165,23 @@
                     lengthChange: true,
                     autoWidth: false,
                     info: true,
-                    order: [[1, 'desc']],
+                    order: [[0, 'desc']],
                     ajax: {
-                        url: "{{route('invoices.ajax')}}",
-                        data: {
-                            'show_account_receivable': show_account_receivable
-                        }
+                        url: "{{route('payments.ajax')}}",
+                     
                     },
                     columns: [
-                        { data: 'invoice_date' },
-                        { data: 'invoice_code' },
+                        { data: 'payment_date' },
                         { data: 'customer_name' },
-                        { data: 'invoice_grand_total', 
+                        { data: 'invoice_code' },
+                        { data: 'amount', 
                         "render": function ( data, type, row, meta ) {
                                          return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
                                   }
                         },
-                        { data: 'invoice_amount_paid', 
-                        "render": function ( data, type, row, meta ) {
-                                         return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
-                                  }
-                        },
-                        { data: 'invoice_amount_due', 
-                        "render": function ( data, type, row, meta ) {
-                                         return ( parseFloat(data).toLocaleString(undefined, {minimumFractionDigits:2}) );
-                                  }
-                        },
-                        { data: 'payment_status', 
-                        "render": function ( data, type, row, meta ) {
-                                        if (data == "Unpaid"){
-                                            return ( "<span class='badge badge-danger'>"+data+"</span>" );
-                                        } else if (data == "Partial"){
-                                            return ( "<span class='badge badge-warning'>"+data+"</span>" );
-                                        } else {
-                                            return ( "<span class='badge badge-success'>"+data+"</span>" );
-                                        }
-                                        
-                                  }
-                        },
-                        { data: 'created_by' },
+                        { data: 'payment_type' },
+                        { data: 'payment_note' },
+                        { data: 'payment_created_by' },
                         { data: 'action'},
                     ],
                     language: {
@@ -264,73 +217,23 @@
                                             //to format this sum
                                             formated = parseFloat(sum).toLocaleString(undefined, {minimumFractionDigits:2});
                                             $(api.column(3).footer()).html('₦ '+ formated);
-
-                                            sum = api.column(4, {page:'current'}).data().sum();
-                                            //to format this sum
-                                            formated = parseFloat(sum).toLocaleString(undefined, {minimumFractionDigits:2});
-                                            $(api.column(4).footer()).html('₦ '+ formated);
-
-                                            sum = api.column(5, {page:'current'}).data().sum();
-                                            //to format this sum
-                                            formated = parseFloat(sum).toLocaleString(undefined, {minimumFractionDigits:2});
-                                            $(api.column(5).footer()).html('₦ '+ formated);
                                         
 		                             }
                         
                    
                 }); // end DataTable
             
-                $("#amount-due-check").change(function() {
-                    $('#invoiceTable').DataTable().destroy();
-                    if(this.checked){
-                        load_datatable('checked');
-                         
-                    } else {
-                        load_datatable();//default unchecked
-                    }
-                    
-                });
+                
             } // end load_datatable
              
             load_datatable();
 
-            //Positive Decimal
-            $("#customer_amount_due").inputFilter(function(value) {
-                 return /^\d*[.]?\d{0,2}$/.test(value); 
-            });
+           
 
         }); //end Document Ready
 
 
 
-        ////////////////////////////////////////
-        /// VIEW PAYMENTS
-        ////////////////////////////////////
-                            
-        function view_payments(id){
-                //ajax call
-                 $.ajaxSetup({
-                    headers: { 'X-CSRF-TOKEN': $('input[name="_token"]').val() }
-                });
-
-                $.ajax({
-                    url: "{{ route('invoices.paymentdetails') }}",
-                    type: "get", //send it through get method
-                    data: { 
-                        id: id, 
-                    },
-                    success: function(response) {
-                        $('#modal-payments-detail').html(response);
-                        $('#modal-payments').modal('show');
-                    },
-                    error: function(xhr) {
-                        //Do Something to handle error
-                    }
-                });
-                
-        }    
-        
-        
          ////////////////////////////////////////
         /// DELETE PAYMENT
         ////////////////////////////////////
@@ -346,27 +249,15 @@
                     },
                     success: function(response) {
                         if (response.status == 1){
-                            $('#payment_'+id).remove(); 
-
-                            var grand_total_row = parseFloat($('#grand_total').text().replace(/,/g, ''));
-                            var total_payment_row = 0;
-
-                            $('.payment_row').each(function(){
-                                total_payment_row = total_payment_row + parseFloat($(this).text().replace(/,/g, ''));
-                            });
-
-                            console.log (grand_total_row);
-                            console.log (total_payment_row);
-                            console.log (grand_total_row - total_payment_row);
-
-                            $('#total_payment').html(total_payment_row.toLocaleString(undefined, {minimumFractionDigits:2}));
-                            $('#amount_due').html((grand_total_row - total_payment_row).toLocaleString(undefined, {minimumFractionDigits:2}) );
+                            
+                            $('#paymentTable').DataTable().ajax.reload();                            
+                            
+                            toastr.success(response.message);
 
                             failed_sound.currentTime = 0;
                             failed_sound.play();
 
-                            $('#invoiceTable').DataTable().ajax.reload();                            
-                            toastr.success(response.message);
+                           
                             
                         } else {
                             toastr.error(response.message);

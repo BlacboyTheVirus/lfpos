@@ -48,7 +48,8 @@ Route::middleware('auth')->group(function () {
     Route::get('customers/transactions', [CustomerController::class, 'transactions'])->name('customers.transactions');
     Route::get('customers/showpayprevious', [CustomerController::class, 'showpayprevious'])->name('customers.showpayprevious');
     Route::post('customers/payprevious', [CustomerController::class, 'payprevious'])->name('customers.payprevious');
-    
+    Route::get('customers/autocomplete', [CustomerController::class, 'autocomplete'])->name('customers.autocomplete');
+
 
     Route::get('invoices/all', [InvoiceController::class, 'index'])->name('invoices.index');
     Route::get('invoices/create', [InvoiceController::class, 'create'])->name('invoices.create');
@@ -60,6 +61,11 @@ Route::middleware('auth')->group(function () {
     Route::get('invoices/delete/{id}', [InvoiceController::class, 'delete'])->name('invoices.delete');
     Route::get('invoices/ajax', [InvoiceController::class, 'ajax'])->name('invoices.ajax');
     Route::get('invoices/paymentdetails', [InvoiceController::class, 'paymentdetails'])->name('invoices.paymentdetails');
+    
+    
+    Route::get('payments/all', [PaymentController::class, 'index'])->name('payments.index');
+    Route::get('payments/ajax', [PaymentController::class, 'ajax'])->name('payments.ajax');
+
 
     Route::get('expenses/all', [ExpenseController::class, 'index'])->name('expenses.index');
     Route::get('expenses/create', [ExpenseController::class, 'create'])->name('expenses.create');

@@ -5,6 +5,7 @@
   <link rel="stylesheet" href="{{ asset('plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
   <link rel="stylesheet" href="{{ asset('plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
   <link rel="stylesheet" href="{{ asset('plugins/datatables-buttons/css/buttons.bootstrap4.min.css') }}">
+  <link rel="stylesheet" href="{{ asset('plugins/datatables-fixedheader/css/fixedHeader.bootstrap4.min.css') }}">
 
   <!-- iCheck for checkboxes and radio inputs -->
   <link rel="stylesheet" href="{{ asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
@@ -189,6 +190,9 @@
     <script src="{{ asset('plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.11.5/api/sum().js"></script>
 
+    <script src="{{ asset('plugins/datatables-fixedheader/js/dataTables.fixedHeader.min.js') }}"></script>
+    <script src="{{ asset('plugins/datatables-fixedheader/js/fixedHeader.bootstrap4.min.js') }}"></script>
+
     <!-- Toastr -->
     <script src="{{ asset('plugins/toastr/toastr.min.js') }}"></script>
 
@@ -317,7 +321,11 @@
                     processing: true,
                     serverSide: true,
                     responsive: true, 
-                    lengthChange: false,
+                    fixedHeader: {
+                    header: true,
+                        headerOffset: $('.main-header').height()+15
+                    },
+                    lengthChange: true,
                     autoWidth: false,
                     info: true,
                     ajax: {
@@ -355,7 +363,7 @@
                                 {extend: 'print', footer:true, exportOptions: {columns: [ '.exportable' ]} }, 
                                 "colvis"
                                 ],
-                    sDom: '<"row" <"#top.col-md-6"> <"col-md-6"f> > rt <"row" <"col-md-6"i> <"col-md-6"p> ><"clear">',
+                    dom: '<"row" <"col-md-3"l> <"#top.col-md-6">  <"col-md-3"f> > rt <"row"  <"col-md-6"i> <"col-md-6"p> ><"clear">',
                     "initComplete": function(settings, json) {
                                     $(this).DataTable().buttons().container()
                                     .appendTo( ('#top'));

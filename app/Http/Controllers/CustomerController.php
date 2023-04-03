@@ -575,10 +575,21 @@ class CustomerController extends Controller
         }
 
             
+    }
+
+    public function autocomplete(){
+        $customers = Customer::select('customer_name')->get();
         
+        foreach ($customers as $customer) {
             
-            
-            
+                $cust[] = $customer->customer_name;
+             
+        }
+
+        return json_encode($cust);
+         
+
+
     }
 
 
