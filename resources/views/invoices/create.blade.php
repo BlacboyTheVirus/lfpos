@@ -399,8 +399,11 @@
                 e.preventDefault();
                 //$('#invoice-form').submit();
                 
+                
 
                 // check if any item has been added to invoice
+                var count = $('#invoice-items tr').length;
+                console.log('COUNT: ' + count);
                 if(count < 1){
                     toastr.info("Please, add items to the invoice before submitting.");
                     return false;
